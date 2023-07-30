@@ -1,11 +1,8 @@
 import { View, Text, StyleSheet, ScrollView } from "react-native"
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Gloss, INavPageProps, SearchResult, Word, WordMeaningExample } from "../models/Word";
 import { useEffect, useState } from "react";
 import StartUp from "../instance/StartUp";
 import SQLiteDataProvider from "../provider/SQLiteDataProvider";
-import { SelectableText } from "@alentoma/react-native-selectable-text";
 const WordDetailPage = (props: INavPageProps<Word>) => {
     let word: Readonly<Word> | undefined = props?.route?.params;
     let dbProvider = StartUp.getInstance<SQLiteDataProvider>();
@@ -34,13 +31,6 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
                     return <View style={style.meaningItem} key={index}>
                         <Text style={style.meaningText}>{index + 1}. </Text>
                         <Text selectable={true} selectionColor="orange" style={style.meaningText}>{gloss.gloss}</Text>
-                        <SelectableText
-                            prependToChild={null}
-                            onSelection={({ eventType, content, selectionStart, selectionEnd }) => {}}
-                            menuItems={["Copy", "Search", "Share"]}
-                            style={style.meaningText}
-                            value={gloss.gloss}
-                         ></SelectableText>
                     </View>
                 }) : <Text>No detail found</Text>
             }
