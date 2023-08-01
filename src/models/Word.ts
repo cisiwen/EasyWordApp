@@ -13,6 +13,7 @@ export interface INavPageProps<T> {
     navigation?: NativeStackNavigationProp<any, string>;
     route?: RouteProp<any, string>;
     screenData?: T;
+    showSlideUpPanel?: boolean;
 }
 
 export type  WordMeaningExample ={
@@ -26,7 +27,12 @@ export type Gloss={
 }
 
 export type  SearchResult<T> ={
+    word?:Word;
     searchItem:string;
     total:number;
     data:T[];
+}
+
+export type DefailHistory ={
+    words:Word[];
 }
