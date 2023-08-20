@@ -4,16 +4,24 @@ import SearchPage from './src/ui/SearchPage';
 import WordDetailPage from './src/ui/WordDetailPage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import BottomTab from './src/ui/layout/BottomTab';
+import { PaperProvider } from 'react-native-paper';
 const Stack = createNativeStackNavigator();
 
 function MyStack() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={SearchPage} />
-        <Stack.Screen name="WordDetail" component={WordDetailPage} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <PaperProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" options={
+            {
+              headerShown: false
+            }
+          } component={BottomTab} />
+          <Stack.Screen name="WordDetail" component={WordDetailPage} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
 export default MyStack

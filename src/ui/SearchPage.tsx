@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, TextInput, FlatList, Button, ListRenderItemInfo
 import { SearchResult, Word } from "../models/Word";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
+import { useTheme } from 'react-native-paper';
 const style = StyleSheet.create({
     topContainer: {
         flex: 1,
