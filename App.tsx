@@ -18,7 +18,15 @@ function MyStack() {
               headerShown: false
             }
           } component={BottomTab} />
-          <Stack.Screen name="WordDetail" component={WordDetailPage} />
+          <Stack.Screen name="WordDetail" options={{
+                          headerShown: true,
+                          headerTitle: "",
+                          headerShadowVisible: false,
+                          headerTransparent: true,
+                          gestureEnabled: true,
+                          gestureDirection: "vertical",
+                          animation: "slide_from_bottom"
+                        }} component={WordDetailPage} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

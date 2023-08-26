@@ -31,8 +31,16 @@ export type  SearchResult<T> ={
     searchItem:string;
     total:number;
     data:T[];
+    category?:WordCategory[];
 }
 
 export type DefailHistory ={
+    words:Word[];
+}
+
+export type WordCategory ={
+    title:string;
+    key:string;
+    groupFunction:(word:Word)=>boolean;
     words:Word[];
 }

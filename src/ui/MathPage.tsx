@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { TextInput, View, Text, StyleSheet } from "react-native";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { TextInput, View, Text, StyleSheet, Alert } from "react-native";
 import { Entypo } from '@expo/vector-icons';
 import { Button, Chip, Switch } from 'react-native-paper';
 import SlidingUpPanel from 'rn-sliding-up-panel';
@@ -13,6 +13,8 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { INavPageProps } from "../models/Word";
 
 export enum MathOperator {
     Plus = "+",
@@ -53,12 +55,18 @@ const style = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         flex: 0.5
+    },
+    columnHeader: {
+        fontWeight: "bold",
+
     }
 })
 export type MathOperatorSelection = {
     operator: MathOperator;
-    max: number;
+    number1Max: number;
+    number2Max: number;
     enabled: boolean;
+    operatorText?: string;
 }
 
 export type UserAnswer = {
@@ -68,24 +76,39 @@ export type UserAnswer = {
     result: number;
     isCorrect: boolean;
 }
-const MathPage = () => {
-
-
-
-
+const MathPage = (props: INavPageProps<any>) => {
+    let navigation = useNavigation<NavigationProp<any>>();
     let [allSupportedOperators, setAllEnabledOperators] = useState<MathOperatorSelection[]>([
-        { operator: MathOperator.Plus, max: 100, enabled: true },
-        { operator: MathOperator.Minus, max: 100, enabled: true },
-        { operator: MathOperator.Multiply, max: 10, enabled: true },
-        { operator: MathOperator.Divide, max: 100, enabled: true },
+        { operator: MathOperator.Plus, number1Max: 100, number2Max: 100, enabled: true, operatorText: "Addition" },
+        { operator: MathOperator.Minus, number1Max: 100, number2Max: 100, enabled: true, operatorText: "Subtraction" },
+        { operator: MathOperator.Multiply, number1Max: 10, number2Max: 20, enabled: true, operatorText: "Multiplication" },
+        { operator: MathOperator.Divide, number1Max: 100, number2Max: 20, enabled: true, operatorText: "Division" },
     ]);
+
+     
+    let optionSeted = false;
+    useEffect(() => {
+        if (!optionSeted) {
+            props?.navigation?.setOptions({
+                headerRight: () => {
+                    return <Ionicons onPress={() => {
+                        navigation.navigate("MathSetting", { allSupportedOperators });
+                    }} name="settings" size={24} color="black" />
+                }
+            });
+            optionSeted = true;
+        }
+        if(props?.route?.params?.updated){
+            setAllEnabledOperators(props?.route?.params?.updated);
+        }
+    })
     let defaultOperator = allSupportedOperators[0];
     let [operator, setOperator] = useState<MathOperatorSelection>(defaultOperator);
-    const getRandomInt = (mx: number | null = null) => {
-        return Math.floor(Math.random() * ((mx ?? operator.max) - 1) + 1);
+    const getRandomInt = (mx: number) => {
+        return Math.floor(Math.random() * (mx - 1) + 1);
     }
-    let [number1, setNumber1] = useState<number>(getRandomInt());
-    let [number2, setNumber2] = useState<number>(getRandomInt());
+    let [number1, setNumber1] = useState<number>(getRandomInt(defaultOperator.number1Max));
+    let [number2, setNumber2] = useState<number>(getRandomInt(defaultOperator.number2Max));
     let [result, setResult] = useState<number | null>();
     let [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
 
@@ -120,8 +143,8 @@ const MathPage = () => {
         let allEnabledOperators = allSupportedOperators.filter(x => x.enabled);
         let operator = allEnabledOperators[getRandomInt(allEnabledOperators.length + 1) - 1];
         setOperator(operator);
-        let number1 = getRandomInt(operator.max);
-        let number2 = getRandomInt(operator.max);
+        let number1 = getRandomInt(operator.number1Max);
+        let number2 = getRandomInt(operator.number2Max);
 
         setNumber1(Math.max(number1, number2));
         setNumber2(Math.min(number1, number2));
@@ -151,6 +174,7 @@ const MathPage = () => {
         }), -1);
     }
 
+
     const submitResult = () => {
         let computedResult = calculate();
         if (computedResult == result) {
@@ -176,6 +200,7 @@ const MathPage = () => {
                 });
                 setUserAnswers(userAnswers);
                 setIsCorrect(false);
+                newQuestion();
             }
             else {
                 newQuestion();
@@ -184,31 +209,15 @@ const MathPage = () => {
         startAnimation();
     }
 
-    const onOperatorSelectionChanged = (operator: MathOperatorSelection) => {
-        allSupportedOperators.forEach(x => {
-            if (x.operator == operator.operator) {
-                x.enabled = operator.enabled;
-                x.max = operator.max;
-            }
-        })
-        setAllEnabledOperators(allSupportedOperators);
-    }
+   
 
+    const settingCallback = () => {
+        Alert.alert("Setting callback");
+    }
     let _panel: SlidingUpPanel | null = null;
 
     return (
         <View style={style.topContainer}>
-            <View style={[{
-                width: "100%",
-                padding: 10,
-                alignItems: "flex-end",
-                alignContent: "flex-end",
-                justifyContent: "flex-end",
-            }]}>
-                <Ionicons onPress={() => {
-                    _panel?.show();
-                }} name="settings" size={24} color="black" />
-            </View>
             <View style={[{ flex: 1 }]}>
                 <Animated.View style={[style.emojiContainer, animatedStyle]}>
                     {isCorrect ? <Entypo name="emoji-happy" size={124} color="black" /> : null}
@@ -225,68 +234,16 @@ const MathPage = () => {
                 <View style={style.buttonContainer}>
                     <Button mode="contained" onPress={submitResult}>Submit</Button>
                 </View>
-                <View style={{flexDirection:"row"}}>
-                    <Chip icon="bookmark-check">{userAnswers.filter((a)=>a.isCorrect).length}</Chip>
-                    <Chip icon="sword-cross">{userAnswers.filter((a)=>!a.isCorrect).length}</Chip>
+                <View style={{ flexDirection: "row" }}>
+                    <Chip icon="bookmark-check">{userAnswers.filter((a) => a.isCorrect).length}</Chip>
+                    <Chip icon="sword-cross">{userAnswers.filter((a) => !a.isCorrect).length}</Chip>
                     <Chip icon="history">{userAnswers.length}</Chip>
                 </View>
             </View>
-            <SlidingUpPanel backdropOpacity={0.8} containerStyle={[{ justifyContent: "flex-end" }]} ref={c => _panel = c}>
-                <SafeAreaView style={style.settingContainer}>
-                    <View>
-                        <OperatorSelectionSetting onChange={onOperatorSelectionChanged} allSupportedOperator={allSupportedOperators}></OperatorSelectionSetting>
-                        <Button onPress={() => _panel?.hide()}>close</Button>
-                    </View>
-                </SafeAreaView>
-            </SlidingUpPanel>
         </View>
     );
 }
 
-const OperatorSelectionSettingItem = (props: { operator: MathOperatorSelection, onChange: (operator: MathOperatorSelection) => void }) => {
-    let [isEnabled, setIsEnabled] = useState<boolean>(props.operator.enabled);
-    let [max, setMax] = useState<number>(props.operator.max);
 
-    return (
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text>{props.operator.operator}</Text>
-            <Switch onValueChange={(e) => {
-                setIsEnabled(e);
-                props.onChange({ operator: props.operator.operator, enabled: e, max: max });
-
-            }} value={isEnabled}>
-            </Switch>
-            <TextInput editable={isEnabled} style={style.textInput} onChange={(e) => {
-                let value = parseInt(e.nativeEvent.text);
-                if (value) {
-                    setMax(value)
-                    props.onChange({ operator: props.operator.operator, enabled: isEnabled, max: value });
-                }
-            }} value={max.toString()}></TextInput>
-        </View>
-    )
-}
-const OperatorSelectionSetting = (props: { allSupportedOperator: MathOperatorSelection[], onChange: (operator: MathOperatorSelection) => void }) => {
-    //const allOperators = [MathOperator.Plus, MathOperator.Minus, MathOperator.Multiply, MathOperator.Divide];
-    //let [selectedOperators, setSelectedOperators] = useState<MathOperator[]>([MathOperator.Plus, MathOperator.Minus, MathOperator.Multiply, MathOperator.Divide]);
-    return (
-        <View>
-            <Text>Operator</Text>
-            <View>
-                {props.allSupportedOperator.map((operator, index) => {
-                    return (
-                        <View key={index} style={{ width: "100%" }}>
-                            <OperatorSelectionSettingItem
-                                operator={operator}
-                                onChange={props.onChange}
-                            ></OperatorSelectionSettingItem>
-                        </View>
-                    )
-                })
-                }
-            </View>
-        </View>
-    );
-}
 
 export default MathPage;

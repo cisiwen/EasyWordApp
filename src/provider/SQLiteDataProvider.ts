@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import { SQLError, SQLTransaction } from 'expo-sqlite';
-import { Gloss, SearchResult, Word, WordMeaningExample } from '../models/Word';
+import { Gloss, SearchResult, Word, WordCategory, WordMeaningExample } from '../models/Word';
 
 export default class SQLiteDataProvider {
 
@@ -77,7 +77,55 @@ export default class SQLiteDataProvider {
         result.rows._array.forEach((element: any) => {
             searchResult.data.push(element);
         });
+        searchResult.category = this.splitResult(searchResult.data, word);
         return searchResult;
+    }
+
+    splitResult(data: Word[], searchWord: string): WordCategory[] {
+
+        let groups: WordCategory[] = [];
+        groups.push({
+            key: "Numbers",
+            title: "Numbers",
+            groupFunction: (word: Word) => word.word.match(/^[0-9]+$/g) != null,
+            words: []
+        });
+        groups.push({
+            key:"Uppercase",
+            title: "Uppercase",
+            groupFunction: (word: Word) => word.word.match(/^[A-Z]+$/g) != null,
+            words: []
+        });
+        if (searchWord?.length > 0) {
+            groups.push({
+                key:"Begin",
+                title: "Begin",
+                groupFunction: (word: Word) => word.word.startsWith(searchWord),
+                words: []
+            });
+            groups.push({
+                key:"End",
+                title: "End",
+                groupFunction: (word: Word) => word.word.endsWith(searchWord),
+                words: []
+            });
+            groups.push({
+                key:"Contains",
+                title: "Contains",
+                groupFunction: (word: Word) => word.word.indexOf(searchWord) > 0,
+                words: []
+            });
+        }
+        data.forEach((a) => {
+            for (let i = 0; i < groups.length; i++) {
+                if (groups[i].groupFunction(a)) {
+                    groups[i].words.push(a);
+                    break;
+                }
+            }
+        })
+
+        return groups.filter((a) => a.words.length > 0);
     }
 
     async searchPhrase(word: string): Promise<SearchResult<Gloss> | undefined> {
@@ -90,5 +138,4 @@ export default class SQLiteDataProvider {
         }
         return undefined;
     }
-
 }

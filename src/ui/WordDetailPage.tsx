@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Button, FlatList, ListRenderItemInfo } from "react-native"
+import { View, Text, StyleSheet, ScrollView, Button, FlatList, ListRenderItemInfo,SafeAreaView } from "react-native"
 import { DefailHistory, Gloss, INavPageProps, SearchResult, Word, WordMeaningExample } from "../models/Word";
 import { Fragment, useEffect, useRef, useState } from "react";
 import StartUp from "../instance/StartUp";
@@ -7,7 +7,6 @@ import { HighlightableText } from "@cisiwen/react-native-highlightable-text";
 import { Selection } from "@cisiwen/react-native-highlightable-text/types";
 import SlidingUpPanel from 'rn-sliding-up-panel';
 import WordDetailPagePopUp from "./WordDetailPagePopUp";
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 const WordDetailPage = (props: INavPageProps<Word>) => {
     let words: Readonly<DefailHistory> | undefined = props?.route?.params;
@@ -157,16 +156,16 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
     const navigateToWordFromHistory = (word: Word) => {
         if (words?.words) {
             let index = words?.words.findIndex((w) => w.word == word.word);
-            let newList = words?.words.slice(0, index+1);
+            let newList = words?.words.slice(0, index + 1);
             let newResults: DefailHistory = { words: newList };
             navigator.navigate("WordDetail", newResults);
         }
     }
     const historyItemRenderer = (item: ListRenderItemInfo<Word>) => {
-        return <Text onPress={()=>navigateToWordFromHistory(item.item)}  style={style.sectionText} key={item.index}>{item.item.word}/</Text>
+        return <Text onPress={() => navigateToWordFromHistory(item.item)} style={style.sectionText} key={item.index}>{item.item.word}/</Text>
     }
-    const flatListRef=useRef<FlatList>(null);
-    return words != null ?
+    const flatListRef = useRef<FlatList>(null);
+    return <SafeAreaView style={{flex:1}}>{words != null ?
         <View style={[{ flex: 1 }]}>
             <View style={style.mainSearchWordContainer}>
                 <FlatList
@@ -215,6 +214,7 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
                 : null}
         </View> :
         <View style={style.detailMeaningContainer}><Text>Please set a word for search</Text></View>
+    }</SafeAreaView>
 
 }
 
