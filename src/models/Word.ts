@@ -5,6 +5,8 @@ export type  Word ={
     word:string;
     phrase:number;
     pronunc:any;
+    iscommon:number;
+    chinese?:string;
 }
 
 
@@ -43,4 +45,5 @@ export type WordCategory ={
     key:string;
     groupFunction:(word:Word)=>boolean;
     words:Word[];
+    allowStop?:boolean;
 }

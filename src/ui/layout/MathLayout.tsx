@@ -9,8 +9,13 @@ const MathLayout = (props: INavPageProps<any>) => {
     const nestNav = createNativeStackNavigator();
     return <SafeAreaView style={{flex:1}}>
         <nestNav.Navigator>
-            <nestNav.Screen name="Math" options={{ headerShown: true }} component={MathPage} />
-            <nestNav.Group screenOptions={{ presentation: "card" }}>
+            <nestNav.Screen 
+                name="Math" 
+                options={{ 
+                    headerShown: true
+                }} 
+                component={MathPage} />
+            <nestNav.Group screenOptions={{ presentation: "modal" }}>
                 <nestNav.Screen name="MathSetting" options={
                     {
                         headerTitle: "Setting",

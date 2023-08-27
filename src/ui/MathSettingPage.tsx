@@ -1,9 +1,10 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { SafeAreaView, Switch, TextInput, View, Text, StyleSheet } from "react-native";
+import { Switch, TextInput, View, Text, StyleSheet, SafeAreaView as RNSafeAreaView, Platform } from "react-native";
 import { Button } from "react-native-paper";
 import { INavPageProps } from "../models/Word";
 import { MathOperatorSelection } from "./MathPage";
 import { useEffect, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 const style = StyleSheet.create({
     topContainer: {
         flex: 1,
@@ -82,33 +83,35 @@ const OperatorSelectionSetting = (props: { allSupportedOperator: MathOperatorSel
     //const allOperators = [MathOperator.Plus, MathOperator.Minus, MathOperator.Multiply, MathOperator.Divide];
     //let [selectedOperators, setSelectedOperators] = useState<MathOperator[]>([MathOperator.Plus, MathOperator.Minus, MathOperator.Multiply, MathOperator.Divide]);
     return (
-        <View style={{ padding: 20 }}>
-            <View style={{ flexDirection: "row", width: "100%", marginBottom: 10 }}>
-                <View style={{ flex: 0.3 }}>
-                    <Text style={[style.columnHeader]}>Operator</Text>
+       
+            <View style={{ padding: 20 }}>
+                <View style={{ flexDirection: "row", width: "100%", marginBottom: 10 }}>
+                    <View style={{ flex: 0.3 }}>
+                        <Text style={[style.columnHeader]}>Operator</Text>
+                    </View>
+                    <View style={{ flex: 0.2 }}></View>
+                    <View style={{ flex: 0.25 }}>
+                        <Text style={[style.columnHeader]}>Number1 max</Text>
+                    </View>
+                    <View style={{ flex: 0.25 }}>
+                        <Text style={[style.columnHeader]}>Number2 max</Text>
+                    </View>
                 </View>
-                <View style={{ flex: 0.2 }}></View>
-                <View style={{ flex: 0.25 }}>
-                    <Text style={[style.columnHeader]}>Number1 max</Text>
-                </View>
-                <View style={{ flex: 0.25 }}>
-                    <Text style={[style.columnHeader]}>Number2 max</Text>
+                <View>
+                    {props.allSupportedOperator.map((operator, index) => {
+                        return (
+                            <View key={index} style={{ width: "100%" }}>
+                                <OperatorSelectionSettingItem
+                                    operator={operator}
+                                    onChange={props.onChange}
+                                ></OperatorSelectionSettingItem>
+                            </View>
+                        )
+                    })
+                    }
                 </View>
             </View>
-            <View>
-                {props.allSupportedOperator.map((operator, index) => {
-                    return (
-                        <View key={index} style={{ width: "100%" }}>
-                            <OperatorSelectionSettingItem
-                                operator={operator}
-                                onChange={props.onChange}
-                            ></OperatorSelectionSettingItem>
-                        </View>
-                    )
-                })
-                }
-            </View>
-        </View>
+        
     );
 }
 
@@ -133,9 +136,8 @@ const MathSettingPage = (props: INavPageProps<any>) => {
     const saveChange = () => {
         navigation.navigate("Math", { updated: allSupportedOperators });
     }
-    return <SafeAreaView style={{ flex: 1 }}>
+    return <SafeAreaView style={{ flex: 1, paddingTop: Platform?.OS=="android" ? 40 :0 }}>
         <OperatorSelectionSetting allSupportedOperator={allSupportedOperators} onChange={onOperatorSelectionChanged}></OperatorSelectionSetting>
-        <Button onPress={saveChange}>Update</Button>
     </SafeAreaView>
 
 }

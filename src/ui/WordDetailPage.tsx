@@ -52,6 +52,7 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
             word: selectedWord,
             id: -1,
             phrase: 0,
+            iscommon: 0,
             pronunc: undefined
         };
         words?.words.push(word);

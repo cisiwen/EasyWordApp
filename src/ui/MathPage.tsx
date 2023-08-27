@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { TextInput, View, Text, StyleSheet, Alert } from "react-native";
 import { Entypo } from '@expo/vector-icons';
-import { Button, Chip, Switch } from 'react-native-paper';
+import { Button, Chip, IconButton, Switch } from 'react-native-paper';
 import SlidingUpPanel from 'rn-sliding-up-panel';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -59,6 +59,14 @@ const style = StyleSheet.create({
     columnHeader: {
         fontWeight: "bold",
 
+    },
+    questionInfo:{
+        borderRadius:0
+    },
+
+    questionInfoFirst:{
+       borderTopRightRadius:0,
+       borderBottomRightRadius:0
     }
 })
 export type MathOperatorSelection = {
@@ -85,7 +93,7 @@ const MathPage = (props: INavPageProps<any>) => {
         { operator: MathOperator.Divide, number1Max: 100, number2Max: 20, enabled: true, operatorText: "Division" },
     ]);
 
-     
+
     let optionSeted = false;
     useEffect(() => {
         if (!optionSeted) {
@@ -98,7 +106,7 @@ const MathPage = (props: INavPageProps<any>) => {
             });
             optionSeted = true;
         }
-        if(props?.route?.params?.updated){
+        if (props?.route?.params?.updated) {
             setAllEnabledOperators(props?.route?.params?.updated);
         }
     })
@@ -145,9 +153,20 @@ const MathPage = (props: INavPageProps<any>) => {
         setOperator(operator);
         let number1 = getRandomInt(operator.number1Max);
         let number2 = getRandomInt(operator.number2Max);
-
-        setNumber1(Math.max(number1, number2));
-        setNumber2(Math.min(number1, number2));
+        if(operator.operator==MathOperator.Divide || operator.operator==MathOperator.Minus){
+            number1 = Math.max(number1, number2);
+            number2 = Math.min(number1, number2);
+        }
+      
+        if (operator.operator == MathOperator.Divide) {
+            let reminder = number1 % number2;
+            number1 = number1 - reminder;
+            if (number2 == 0) {
+                number2 = 1;
+            }
+        }
+        setNumber1(number1);
+        setNumber2(number2);
 
 
     }
@@ -209,7 +228,13 @@ const MathPage = (props: INavPageProps<any>) => {
         startAnimation();
     }
 
-   
+    const reset = () => {
+        setResult(null);
+        setIsCorrect(null);
+        setUserAnswers([]);
+        //newQuestion();
+    }
+
 
     const settingCallback = () => {
         Alert.alert("Setting callback");
@@ -218,8 +243,9 @@ const MathPage = (props: INavPageProps<any>) => {
 
     return (
         <View style={style.topContainer}>
-            <View style={[{ flex: 1 }]}>
+            <View style={[{ flex: 1, alignItems: "center" }]}>
                 <Animated.View style={[style.emojiContainer, animatedStyle]}>
+                    {isCorrect == null ? <IconButton size={124} icon="head-dots-horizontal"></IconButton> : null}
                     {isCorrect ? <Entypo name="emoji-happy" size={124} color="black" /> : null}
                     {isCorrect != null && !isCorrect ? <Entypo name="emoji-sad" size={124} color="black" /> : null}
                 </Animated.View>
@@ -234,10 +260,15 @@ const MathPage = (props: INavPageProps<any>) => {
                 <View style={style.buttonContainer}>
                     <Button mode="contained" onPress={submitResult}>Submit</Button>
                 </View>
-                <View style={{ flexDirection: "row" }}>
-                    <Chip icon="bookmark-check">{userAnswers.filter((a) => a.isCorrect).length}</Chip>
-                    <Chip icon="sword-cross">{userAnswers.filter((a) => !a.isCorrect).length}</Chip>
-                    <Chip icon="history">{userAnswers.length}</Chip>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <View style={{ flexDirection: "row"}}>
+                        <Chip style={[style.questionInfoFirst]} icon="bookmark-check">{userAnswers.filter((a) => a.isCorrect).length}</Chip>
+                        <Chip style={[style.questionInfo]}  icon="sword-cross">{userAnswers.filter((a) => !a.isCorrect).length}</Chip>
+                        <Chip style={[style.questionInfo,{ marginRight: -3 }]}  icon="history">{userAnswers.length}</Chip>
+                    </View>
+                    <View style={{ marginLeft: -3 }}>
+                        <Button mode="contained" onPress={reset} icon="delete">Reset</Button>
+                    </View>
                 </View>
             </View>
         </View>

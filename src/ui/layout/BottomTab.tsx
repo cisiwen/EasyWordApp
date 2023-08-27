@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { EventArg, useNavigation } from '@react-navigation/native';
 import { INavPageProps } from '../../models/Word';
 import { SafeAreaView } from 'react-native';
+import WordSearchLayout from './WordSearchLayout';
 const BottomTab = (props: INavPageProps<any>) => {
     const Tab = createBottomTabNavigator();
     const navigation = useNavigation();
@@ -38,7 +39,7 @@ const BottomTab = (props: INavPageProps<any>) => {
                         toggleSearchBar(e);
                     }
                 }}
-                component={SearchPage} />
+                component={WordSearchLayout} />
             <Tab.Screen
                 options={
                     {

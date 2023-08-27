@@ -5,7 +5,8 @@ import { View, Text, StyleSheet, TextInput, FlatList, Button, ListRenderItemInfo
 import { INavPageProps, SearchResult, Word, WordCategory } from "../models/Word";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
-import { Searchbar, useTheme } from 'react-native-paper';
+import { Searchbar } from 'react-native-paper';
+import { useTheme } from '@react-navigation/native';
 import {
     NavigationState,
     SceneMap,
@@ -13,6 +14,7 @@ import {
     TabBar,
     TabView,
 } from 'react-native-tab-view';
+import { SafeAreaView } from "react-native-safe-area-context";
 type State = NavigationState<WordCategory>;
 const style = StyleSheet.create({
     topContainer: {
@@ -26,6 +28,7 @@ const style = StyleSheet.create({
         borderBottomWidth: 2,
         borderBottomColor: "#00000034",
         padding: 10,
+        display: "none"
     },
     resultContainer: {
         flex: 1
@@ -35,7 +38,7 @@ const style = StyleSheet.create({
         paddingTop: 8,
         paddingBottom: 8,
         borderBottomColor: "black",
-        borderBottomWidth: 1,
+        borderBottomWidth: 0,
     },
     resultItemText: {
         fontSize: 25,
@@ -63,7 +66,10 @@ const style = StyleSheet.create({
     },
     label: {
         fontWeight: '400',
-    }
+    },
+    separator: {
+        height: StyleSheet.hairlineWidth,
+    },
 });
 const SearchPage = (props: INavPageProps<any>) => {
     let dbProvider = StartUp.getInstance<SQLiteDataProvider>();
@@ -73,9 +79,18 @@ const SearchPage = (props: INavPageProps<any>) => {
     let [searchWordText, setSearchWordText] = React.useState("");
     let [debugMessage, setDebugMessage] = React.useState("");
     const navigation = props.navigation;
-
-
     useLayoutEffect(() => {
+        navigation?.setOptions({
+            headerTitle: "Word search",
+            headerSearchBarOptions: {
+                autoCapitalize: "none",
+                onChangeText: (e) => {
+                    console.log("onChangeText", e.nativeEvent.text);
+                    searchWordHandler(e.nativeEvent.text);
+                    setSearchWordText(e.nativeEvent.text);
+                }
+            }
+        });
     })
 
     useEffect(() => {
@@ -83,7 +98,7 @@ const SearchPage = (props: INavPageProps<any>) => {
         (async () => {
             setDebugMessage("openDatabase start");
             try {
-                let dbOpen = await dbProvider.openDatabase("https://www.jpgtour.com/public/wordnet.sqlite");
+                let dbOpen = await dbProvider.openDatabase("https://www.jpgtour.com/public/wordnet.sqlite",false);
                 setIsOpening(false)
                 setDbOpened(dbOpen);
                 setDebugMessage("openDatabase good");
@@ -96,10 +111,23 @@ const SearchPage = (props: INavPageProps<any>) => {
 
         }
     }, ["TESTING"]);
+
+    const ItemSeparator = () => {
+        const { colors } = useTheme();
+
+        return (
+            <View style={[style.separator, { backgroundColor: colors.primary }]} />
+        );
+    };
     const renderItem = (item: ListRenderItemInfo<Word>) => {
         return <Pressable onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }}>
             <View key={item.index} style={style.resultItem}>
                 <Text style={style.resultItemText}>{item.item.word}</Text>
+                {
+                    item?.item?.chinese ?
+                        <Text>{item.item.chinese}</Text>
+                        : null
+                }
             </View>
         </Pressable>
     }
@@ -128,10 +156,15 @@ const SearchPage = (props: INavPageProps<any>) => {
     const readerScene = (scene: { route: WordCategory }) => {
         //console.log("readerScene", scene.route);
         return <View style={{ flex: 1 }}>
-            <FlatList data={scene.route.words} renderItem={renderItem}></FlatList>
+            <FlatList
+                ItemSeparatorComponent={ItemSeparator}
+                data={scene.route.words}
+                renderItem={renderItem}>
+            </FlatList>
         </View>
     }
     const renderScene = SceneMap({
+        CommonWords: readerScene,
         Numbers: readerScene,
         Uppercase: readerScene,
         Begin: readerScene,
@@ -152,39 +185,41 @@ const SearchPage = (props: INavPageProps<any>) => {
             gap={20}
         />
     );
-    return <View style={style.topContainer}>
-        {
-            !isOpening ?
-                <Fragment>
-                    <View style={style.inputContainer}>
-                        <Searchbar
-                            autoCapitalize="none"
-                            style={{ width: "100%" }}
-                            theme={{ colors: { primary: 'green' } }}
-                            placeholder="Search"
-                            //onSubmitEditing={searchWordHandler}
-                            onChangeText={(e) => {
-                                searchWordHandler(e);
-                                setSearchWordText(e);
-                            }}
-                            value={searchWordText}
-                        />
-                    </View>
-                    <View style={style.resultContainer}>
-                        <TabView
-                            lazy
-                            navigationState={{
-                                index,
-                                routes,
-                            }}
-                            renderScene={renderScene}
-                            renderTabBar={renderTabBar}
-                            onIndexChange={onIndexChange}
-                        />
-                    </View>
-                </Fragment>
-                : <View style={style.debugContainer}><Text style={style.debugContainerText}>{debugMessage}</Text></View>
-        }
-    </View>
+    return <SafeAreaView style={{ flex: 1 }}>
+        <View style={style.topContainer}>
+            {
+                !isOpening ?
+                    <Fragment>
+                        <View style={style.inputContainer}>
+                            <Searchbar
+                                autoCapitalize="none"
+                                style={{ width: "100%" }}
+                                theme={{ colors: { primary: 'green' } }}
+                                placeholder="Search"
+                                //onSubmitEditing={searchWordHandler}
+                                onChangeText={(e) => {
+                                    //searchWordHandler(e);
+                                    //setSearchWordText(e);
+                                }}
+                                value={searchWordText}
+                            />
+                        </View>
+                        <View style={style.resultContainer}>
+                            <TabView
+                                lazy
+                                navigationState={{
+                                    index,
+                                    routes,
+                                }}
+                                renderScene={renderScene}
+                                renderTabBar={renderTabBar}
+                                onIndexChange={onIndexChange}
+                            />
+                        </View>
+                    </Fragment>
+                    : <View style={style.debugContainer}><Text style={style.debugContainerText}>{debugMessage}</Text></View>
+            }
+        </View>
+    </SafeAreaView>
 };
 export default SearchPage;
