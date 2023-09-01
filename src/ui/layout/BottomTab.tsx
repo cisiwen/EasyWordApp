@@ -21,7 +21,7 @@ const BottomTab = (props: INavPageProps<any>) => {
         })
 
     }
-    return <SafeAreaView style={{flex:1}}>
+    return (
         <Tab.Navigator>
             <Tab.Screen
                 options={
@@ -57,7 +57,7 @@ const BottomTab = (props: INavPageProps<any>) => {
                 name="MathLayout"
                 component={MathLayout} />
         </Tab.Navigator>
-    </SafeAreaView>
+   )
 
 }
 

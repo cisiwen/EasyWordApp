@@ -3,10 +3,6 @@ import { DefailHistory, Gloss, INavPageProps, SearchResult, Word, WordMeaningExa
 import { Fragment, useEffect, useRef, useState } from "react";
 import StartUp from "../instance/StartUp";
 import SQLiteDataProvider from "../provider/SQLiteDataProvider";
-import { HighlightableText } from "@cisiwen/react-native-highlightable-text";
-import { Selection } from "@cisiwen/react-native-highlightable-text/types";
-import SlidingUpPanel from 'rn-sliding-up-panel';
-import WordDetailPagePopUp from "./WordDetailPagePopUp";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 const WordDetailPage = (props: INavPageProps<Word>) => {
     let words: Readonly<DefailHistory> | undefined = props?.route?.params;
@@ -38,14 +34,6 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
         searchDetail();
     }, [words])
 
-
-    const showSlidupPanel = (selection: Selection, str: string) => {
-        let selectedWord = str.substring(selection.start, selection.end);
-        console.log("selectedWord", selectedWord);
-        setPopUpWord(selectedWord);
-        //slideUpPanel?.show();
-    }
-
     const showSlidupPanelWithText = (selectedWord: string) => {
         console.log("selectedWord", selectedWord);
         let word: Word = {
@@ -72,7 +60,6 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
             </Text>
         })
     }
-    let slideUpPanel: SlidingUpPanel | null;
     const readerMeaning = (gloss: Gloss[] | undefined) => {
         return <View>
             <View style={[{ paddingBottom: 10, paddingTop: 10 }]}>
@@ -118,41 +105,6 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
             }
         </View> : null;
     }
-    const readerExample_old = (gloss: Gloss[] | undefined) => {
-
-        let examples: WordMeaningExample[] | undefined = gloss?.reduce((prev: WordMeaningExample[], current: Gloss) => {
-            if (current.example) {
-                prev.push(...current.example);
-            }
-            return prev;
-        }, []);
-
-        return examples && examples.length > 0 ? <View>
-            <View style={[{ paddingBottom: 10, paddingTop: 10 }]}>
-                <Text style={style.sectionText} >Example</Text>
-            </View>
-            {
-
-                examples?.map((example, index) => {
-                    return <View style={style.meaningItem} key={`${index}-${index}`}>
-                        <Text style={style.meaningText}>{index + 1}. </Text>
-                        <HighlightableText
-                            style={style.meaningText}
-                            onSelectionChange={(selection) => {
-                                console.log("onSelectionChange", selection);
-                                showSlidupPanel(selection, example.example);
-                            }}
-                            onWordPress={(event) => { console.log("onWordPress", event) }}
-                            onHighlightPress={(id) => { console.log("onHighlightPress", id) }}
-                            onHighlightRectsCalculated={(rects) => { console.log("onHighlightRectsCalculated", rects) }}
-                            value={example.example} highlights={[]} />
-                    </View>
-                })
-
-            }
-        </View> : null;
-    }
-
 
     const navigateToWordFromHistory = (word: Word) => {
         if (words?.words) {
@@ -194,25 +146,6 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
                 }
                 <View style={[{ height: 100 }]}></View>
             </ScrollView>
-
-            {popUpWord != null && popUpWord.length > 0 ?
-                <SlidingUpPanel showBackdrop={true} ref={(c) => {
-                    slideUpPanel = c;
-                    slideUpPanel?.show()
-                }}>
-
-                    <SafeAreaView style={style.wordInnerMeaningContainer}>
-
-                        <View style={style.wordInnerWrapperMeaningContainer}>
-                            {
-                                popUpWord != null && popUpWord.length > 0 &&
-                                <WordDetailPagePopUp word={popUpWord}></WordDetailPagePopUp>
-                            }
-                        </View>
-                    </SafeAreaView>
-
-                </SlidingUpPanel>
-                : null}
         </View> :
         <View style={style.detailMeaningContainer}><Text>Please set a word for search</Text></View>
     }</SafeAreaView>

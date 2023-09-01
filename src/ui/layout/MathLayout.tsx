@@ -4,6 +4,7 @@ import MathSettingPage from "../MathSettingPage";
 import { useEffect } from "react";
 import { INavPageProps } from "../../models/Word";
 import { SafeAreaView } from "react-native";
+import MathPageGame from "../MathPageGame";
 
 const MathLayout = (props: INavPageProps<any>) => {
     const nestNav = createNativeStackNavigator();

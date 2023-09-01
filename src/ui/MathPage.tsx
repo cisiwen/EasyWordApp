@@ -236,11 +236,6 @@ const MathPage = (props: INavPageProps<any>) => {
     }
 
 
-    const settingCallback = () => {
-        Alert.alert("Setting callback");
-    }
-    let _panel: SlidingUpPanel | null = null;
-
     return (
         <View style={style.topContainer}>
             <View style={[{ flex: 1, alignItems: "center" }]}>
@@ -262,7 +257,9 @@ const MathPage = (props: INavPageProps<any>) => {
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <View style={{ flexDirection: "row"}}>
-                        <Chip style={[style.questionInfoFirst]} icon="bookmark-check">{userAnswers.filter((a) => a.isCorrect).length}</Chip>
+                        <Chip onPress={()=>{
+                            navigation.navigate("MathPageGame");
+                        }} style={[style.questionInfoFirst]} icon="bookmark-check">{userAnswers.filter((a) => a.isCorrect).length}</Chip>
                         <Chip style={[style.questionInfo]}  icon="sword-cross">{userAnswers.filter((a) => !a.isCorrect).length}</Chip>
                         <Chip style={[style.questionInfo,{ marginRight: -3 }]}  icon="history">{userAnswers.length}</Chip>
                     </View>
