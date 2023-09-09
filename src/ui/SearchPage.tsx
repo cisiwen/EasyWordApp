@@ -5,8 +5,9 @@ import { View, Text, StyleSheet, TextInput, FlatList, Button, ListRenderItemInfo
 import { INavPageProps, SearchResult, Word, WordCategory } from "../models/Word";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
-import { Searchbar } from 'react-native-paper';
+import { IconButton, Searchbar } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
+import { ActivityIndicator, MD2Colors } from 'react-native-paper';
 import {
     NavigationState,
     SceneMap,
@@ -15,6 +16,8 @@ import {
     TabView,
 } from 'react-native-tab-view';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { UserDataService } from "../Service/UserDataService";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type State = NavigationState<WordCategory>;
 const style = StyleSheet.create({
     topContainer: {
@@ -34,6 +37,7 @@ const style = StyleSheet.create({
         flex: 1
     },
     resultItem: {
+        flexDirection: "row",
         padding: 10,
         paddingTop: 8,
         paddingBottom: 8,
@@ -72,12 +76,14 @@ const style = StyleSheet.create({
     },
 });
 const SearchPage = (props: INavPageProps<any>) => {
-    let dbProvider = StartUp.getInstance<SQLiteDataProvider>();
+    let dbProvider = StartUp.getInstance<SQLiteDataProvider>(SQLiteDataProvider.OBJECTID);
+    let userWordService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
     let [dbOpened, setDbOpened] = React.useState(false);
     let [isOpening, setIsOpening] = React.useState(true);
     let [searchWord, setSearchWord] = React.useState<SearchResult<Word> | undefined>(undefined);
     let [searchWordText, setSearchWordText] = React.useState("");
     let [debugMessage, setDebugMessage] = React.useState("");
+    let userid = "Terry";
     const navigation = props.navigation;
     useLayoutEffect(() => {
         navigation?.setOptions({
@@ -98,7 +104,7 @@ const SearchPage = (props: INavPageProps<any>) => {
         (async () => {
             setDebugMessage("openDatabase start");
             try {
-                let dbOpen = await dbProvider.openDatabase("https://www.jpgtour.com/public/wordnet.sqlite",false);
+                let dbOpen = await dbProvider.openDatabase("https://www.jpgtour.com/public/wordnet.sqlite", "myDatabaseName", false);
                 setIsOpening(false)
                 setDbOpened(dbOpen);
                 setDebugMessage("openDatabase good");
@@ -119,17 +125,11 @@ const SearchPage = (props: INavPageProps<any>) => {
             <View style={[style.separator, { backgroundColor: colors.primary }]} />
         );
     };
+
+
+
     const renderItem = (item: ListRenderItemInfo<Word>) => {
-        return <Pressable onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }}>
-            <View key={item.index} style={style.resultItem}>
-                <Text style={style.resultItemText}>{item.item.word}</Text>
-                {
-                    item?.item?.chinese ?
-                        <Text>{item.item.chinese}</Text>
-                        : null
-                }
-            </View>
-        </Pressable>
+        return <SearchResultItem userid={userid} userWordService={userWordService} navigation={navigation} item={item} />
     }
 
     const searchWordHandler = async (text: string) => {
@@ -222,4 +222,43 @@ const SearchPage = (props: INavPageProps<any>) => {
         </View>
     </SafeAreaView>
 };
+
+const SearchResultItem = (props: { userid: string, item: ListRenderItemInfo<Word>, userWordService: UserDataService, navigation: NativeStackNavigationProp<any, string> | undefined }) => {
+    let [isSaving, setIsSaving] = React.useState(false);
+    let item = props.item;
+    let userid = props.userid;
+    let navigation = props.navigation;
+    const addToUserWords = async (word: Word) => {
+        setIsSaving(true);
+        try {
+            await props.userWordService.saveUserWord(word.word, userid);
+        }
+        catch (error) {
+            console.error(error);
+        }
+        setIsSaving(false);
+    }
+
+    return <Pressable onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }}>
+        <View key={item.index} style={style.resultItem}>
+            <View style={{ flex: 1 }}>
+                <Text style={style.resultItemText}>{item.item.word}</Text>
+                {
+                    item?.item?.chinese ?
+                        <Text>{item.item.chinese}</Text>
+                        : null
+                }
+            </View>
+            <View style={{ width: 40, justifyContent: "center" }}>
+                {
+                    isSaving ? <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> :
+                        <IconButton onPress={(e) => {
+                            e.stopPropagation();
+                            addToUserWords(item.item);
+                        }} icon="plus-circle"></IconButton>
+                }
+            </View>
+        </View>
+    </Pressable>
+}
 export default SearchPage;

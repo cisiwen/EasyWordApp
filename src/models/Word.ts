@@ -47,3 +47,14 @@ export type WordCategory ={
     words:Word[];
     allowStop?:boolean;
 }
+
+export type UserWord={
+    word:string;
+    first_check_date:Date;
+    userid:string;
+}
+
+export type UserWordGroup={
+    title:string;
+    data:UserWord[];
+}

@@ -6,7 +6,7 @@ import SQLiteDataProvider from "../provider/SQLiteDataProvider";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 const WordDetailPage = (props: INavPageProps<Word>) => {
     let words: Readonly<DefailHistory> | undefined = props?.route?.params;
-    let dbProvider = StartUp.getInstance<SQLiteDataProvider>();
+    let dbProvider = StartUp.getInstance<SQLiteDataProvider>(SQLiteDataProvider.OBJECTID);
     let [searchResult, setSearchResult] = useState<SearchResult<Gloss> | null>(null);
     let [popUpWord, setPopUpWord] = useState<string | null>(null);
     let word: Word | undefined = undefined;

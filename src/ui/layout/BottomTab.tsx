@@ -11,6 +11,7 @@ import { EventArg, useNavigation } from '@react-navigation/native';
 import { INavPageProps } from '../../models/Word';
 import { SafeAreaView } from 'react-native';
 import WordSearchLayout from './WordSearchLayout';
+import MyPage from '../MyPage';
 const BottomTab = (props: INavPageProps<any>) => {
     const Tab = createBottomTabNavigator();
     const navigation = useNavigation();
@@ -54,8 +55,21 @@ const BottomTab = (props: INavPageProps<any>) => {
                         toggleSearchBar(e);
                     }
                 }}
+                
                 name="MathLayout"
                 component={MathLayout} />
+
+            <Tab.Screen 
+            options={
+                {
+                     tabBarIcon: ({ color, size }) => {
+                        return <Ionicons name="person" color={color} size={size} />
+                     }
+            
+                }
+            }
+            name='My' 
+            component={MyPage}></Tab.Screen>
         </Tab.Navigator>
    )
 

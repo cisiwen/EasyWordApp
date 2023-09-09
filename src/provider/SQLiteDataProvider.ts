@@ -5,28 +5,29 @@ import { SQLError, SQLTransaction } from 'expo-sqlite';
 import { Gloss, SearchResult, Word, WordCategory, WordMeaningExample } from '../models/Word';
 
 export default class SQLiteDataProvider {
-
+    public static OBJECTID: string = "SQLiteDataProvider";
     public db: SQLite.SQLiteDatabase | undefined = undefined
     constructor() {
 
     }
-    async openDatabase(pathToDatabaseFile: string, update: boolean = false): Promise<boolean> {
+    async openDatabase(pathToDatabaseFile: string, dbname: string, update: boolean = false): Promise<boolean> {
         if (this.db == null) {
+            console.log("openDatabase", FileSystem.documentDirectory);
             if (!(await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'SQLite')).exists) {
                 await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'SQLite');
             }
-            let isDbExists = await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'SQLite/myDatabaseName.db');
+            let isDbExists = await FileSystem.getInfoAsync(FileSystem.documentDirectory + `SQLite/${dbname}.db`);
             if (update && isDbExists.exists) {
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + 'SQLite/myDatabaseName.db');
-                isDbExists = await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'SQLite/myDatabaseName.db');
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + `SQLite/${dbname}.db`);
+                isDbExists = await FileSystem.getInfoAsync(FileSystem.documentDirectory + `SQLite/${dbname}.db`);
             }
             if (!isDbExists.exists) {
                 await FileSystem.downloadAsync(
                     pathToDatabaseFile,
-                    FileSystem.documentDirectory + 'SQLite/myDatabaseName.db'
+                    FileSystem.documentDirectory + `SQLite/${dbname}.db`
                 );
             }
-            this.db = SQLite.openDatabase('myDatabaseName.db');
+            this.db = SQLite.openDatabase(`${dbname}.db`);
         }
         return true;
     }
@@ -36,13 +37,14 @@ export default class SQLiteDataProvider {
             if (this.db == null) {
                 reject('Database not opened');
             }
+            console.log(this.db);
             this.db!.transaction((tx) => {
                 tx.executeSql(query, params, (tx, results) => {
                     resolve(results);
                 }),
-                    (transaction: SQLTransaction, error: SQLError) => {
-                        reject(error);
-                    }
+                (transaction: SQLTransaction, error: SQLError) => {
+                    reject(error);
+                }
             });
         });
     }
@@ -76,7 +78,7 @@ export default class SQLiteDataProvider {
 
     async searchWord(word: string, exactSearch: boolean = false): Promise<SearchResult<Word>> {
         //let sql = `select * from word where word${exactSearch ? `="${word}"` : ` like "%${word}%"`} and phrase=0 order by word asc`;
-        let sql=`select w.*,commonword.chinese  from word as w left outer join commonword on w.word==commonword.word where w.word${exactSearch ? `="${word}"` : ` like "%${word}%"`} and w.phrase=0 order by w.word asc`
+        let sql = `select w.*,commonword.chinese  from word as w left outer join commonword on w.word==commonword.word where w.word${exactSearch ? `="${word}"` : ` like "%${word}%"`} and w.phrase=0 order by w.word asc`
         let result = await this.executeQuery(sql);
         let searchResult: SearchResult<Word> = { searchItem: word, total: result.rows.length, data: [] };
         result.rows._array.forEach((element: any) => {

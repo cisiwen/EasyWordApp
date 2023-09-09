@@ -1,17 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 import SearchPage from './src/ui/SearchPage';
 import WordDetailPage from './src/ui/WordDetailPage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomTab from './src/ui/layout/BottomTab';
-import { PaperProvider } from 'react-native-paper';
+import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import MathPageGame from './src/ui/MathPageGame';
+import {
+  ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+  useTheme,
+} from "@react-navigation/native";
 const Stack = createNativeStackNavigator();
 
 function MyStack() {
   return (
-    <PaperProvider>
+    <ThemeProvider value={DarkTheme}>
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen name="Home" options={
@@ -31,7 +37,7 @@ function MyStack() {
           <Stack.Screen name="MathPageGame" component={MathPageGame}></Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
-    </PaperProvider>
+    </ThemeProvider>
   );
 }
 export default MyStack

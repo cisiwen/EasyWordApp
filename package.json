@@ -17,6 +17,8 @@
     "@react-navigation/bottom-tabs": "^6.5.8",
     "@react-navigation/native": "^6.1.7",
     "@react-navigation/native-stack": "^6.9.13",
+    "@types/color": "^3.0.4",
+    "color": "^4.2.3",
     "expo": "~49.0.5",
     "expo-asset": "~8.10.1",
     "expo-file-system": "~15.4.2",
