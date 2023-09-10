@@ -1,13 +1,13 @@
 import React, { Fragment, useEffect, useLayoutEffect } from "react";
 import StartUp from "../instance/StartUp";
 import SQLiteDataProvider from "../provider/SQLiteDataProvider";
-import { View, Text, StyleSheet, TextInput, FlatList, Button, ListRenderItemInfo, Pressable, TextInputChangeEventData } from "react-native";
+import { View, StyleSheet, TextInput, FlatList, ListRenderItemInfo, Pressable, TextInputChangeEventData } from "react-native";
 import { INavPageProps, SearchResult, Word, WordCategory } from "../models/Word";
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
-import { IconButton, Searchbar } from 'react-native-paper';
+import { Chip, IconButton, Searchbar } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
-import { ActivityIndicator, MD2Colors } from 'react-native-paper';
+import { ActivityIndicator, MD2Colors,Text,Button } from 'react-native-paper';
 import {
     NavigationState,
     SceneMap,
@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserDataService } from "../Service/UserDataService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Banner } from 'react-native-paper';
 type State = NavigationState<WordCategory>;
 const style = StyleSheet.create({
     topContainer: {
@@ -28,10 +29,11 @@ const style = StyleSheet.create({
         fontSize: 30,
     },
     inputContainer: {
-        borderBottomWidth: 2,
-        borderBottomColor: "#00000034",
-        padding: 10,
-        display: "none"
+        margin:5,
+        borderRadius:10,
+        overflow:"hidden",
+        flexDirection: "row",
+        alignContent: "center",
     },
     resultContainer: {
         flex: 1
@@ -190,19 +192,13 @@ const SearchPage = (props: INavPageProps<any>) => {
             {
                 !isOpening ?
                     <Fragment>
-                        <View style={style.inputContainer}>
-                            <Searchbar
-                                autoCapitalize="none"
-                                style={{ width: "100%" }}
-                                theme={{ colors: { primary: 'green' } }}
-                                placeholder="Search"
-                                //onSubmitEditing={searchWordHandler}
-                                onChangeText={(e) => {
-                                    //searchWordHandler(e);
-                                    //setSearchWordText(e);
-                                }}
-                                value={searchWordText}
-                            />
+                        <View style={[style.inputContainer,{display:searchWordText?.length>0 ? "flex":"none"}]}>
+                        <Chip style={[{flex:1,backgroundColor:"transparent"}]}>Save <Text style={{fontWeight:"bold",fontSize:20}}>{searchWordText}</Text> to my search
+                            
+                        </Chip>
+                        <Button mode="contained" compact={true} labelStyle={{lineHeight:15}} style={{padding:0}}   onPress={() => {
+                                userWordService.saveUserWord(searchWordText, userid);
+                            }}>Save</Button>
                         </View>
                         <View style={style.resultContainer}>
                             <TabView

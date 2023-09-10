@@ -28,8 +28,6 @@ export class UserDataService {
             else {
 
             }
-         
-
     }
 
     async deleteUserWord(userId: string, word: string) {
@@ -54,7 +52,7 @@ export class UserDataService {
     }
 
     async hideUserWord(userId: string, word: string) {
-        let sql = `update user_words set first_check_date=${new Date().getTime()} where userid='${userId}' and word='${word}'`;
+        let sql = `update user_words set hidden=1 where userid='${userId}' and word='${word}'`;
         await this.provider.executeQuery(sql);
     }
 
