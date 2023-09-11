@@ -1,4 +1,4 @@
-import { UserWord, UserWordGroup } from "../models/Word";
+import { UserSearch, UserWord, UserWordGroup } from "../models/Word";
 import SQLiteDataProvider from "../provider/SQLiteDataProvider";
 
 export class UserDataService {
@@ -23,11 +23,42 @@ export class UserDataService {
             let sql = `insert into user_words(word,first_check_date,userid) values ('${word}',${new Date().getTime()},'${userId}')`;
             if (exists?.length == 0) {
                 let result = await this.provider.executeQuery(sql);
-                console.log(result);
+                //console.log(result);
             }
             else {
 
             }
+    }
+
+    async getUserSearch(userId:string,word:string|undefined=undefined):Promise<UserSearch[]>{
+        
+        let sql = `select * from user_search where ueserid='${userId}'`;
+        if(word){
+            sql=`${sql} and search_word='${word}'`;
+        }
+        sql=`${sql} order by date_search desc`;
+        console.log(this.getUserSearch.name, sql);
+        let result = await this.provider.executeQuery(sql);
+        let words:UserSearch[]=[];
+        result.rows._array.forEach((element:any) => {
+            words.push({
+                user_search_id:element.user_search_id,
+                userid:element.ueseridr,
+                search_word:element.search_word,
+                date_search:new Date(element.date_search),
+            });
+        });
+        return words;
+    }
+
+    async saveUserSearch(search:string,userid:string){
+        let exists = await this.getUserSearch(userid,search);
+        console.log(this.saveUserSearch.name, exists);
+        if(exists.length==0){
+            let sql = `insert into user_search(search_word,date_search,ueserid) values ('${search}',${new Date().getTime()},'${userid}')`;
+            let result = await this.provider.executeQuery(sql);
+            console.log(result);
+        }
     }
 
     async deleteUserWord(userId: string, word: string) {
