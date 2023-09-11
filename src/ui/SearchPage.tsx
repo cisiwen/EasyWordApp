@@ -7,7 +7,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import { Chip, IconButton, Searchbar } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
-import { ActivityIndicator, MD2Colors,Text,Button } from 'react-native-paper';
+import { ActivityIndicator, MD2Colors, Text, Button } from 'react-native-paper';
 import {
     NavigationState,
     SceneMap,
@@ -29,9 +29,9 @@ const style = StyleSheet.create({
         fontSize: 30,
     },
     inputContainer: {
-        margin:5,
-        borderRadius:10,
-        overflow:"hidden",
+        margin: 5,
+        borderRadius: 10,
+        overflow: "hidden",
         flexDirection: "row",
         alignContent: "center",
     },
@@ -85,6 +85,7 @@ const SearchPage = (props: INavPageProps<any>) => {
     let [searchWord, setSearchWord] = React.useState<SearchResult<Word> | undefined>(undefined);
     let [searchWordText, setSearchWordText] = React.useState("");
     let [debugMessage, setDebugMessage] = React.useState("");
+    let [isSavingUserSearch, setIsSavingUserSearch] = React.useState(false);
     let userid = "Terry";
     const navigation = props.navigation;
     useLayoutEffect(() => {
@@ -173,6 +174,16 @@ const SearchPage = (props: INavPageProps<any>) => {
         End: readerScene,
         Contains: readerScene,
     });
+    const saveUserSearch = async () => {
+        setIsSavingUserSearch(true);
+        try {
+            await userWordService.saveUserSearch(searchWordText, userid);
+        }
+        catch (error) {
+            console.error(error);
+        }
+        setIsSavingUserSearch(false);
+    }
     const renderTabBar = (
         props: SceneRendererProps & { navigationState: State }
     ) => (
@@ -192,13 +203,16 @@ const SearchPage = (props: INavPageProps<any>) => {
             {
                 !isOpening ?
                     <Fragment>
-                        <View style={[style.inputContainer,{display:searchWordText?.length>0 ? "flex":"none"}]}>
-                        <Chip style={[{flex:1,backgroundColor:"transparent"}]}>Save <Text style={{fontWeight:"bold",fontSize:20}}>{searchWordText}</Text> to my search
-                            
-                        </Chip>
-                        <Button mode="contained" compact={true} labelStyle={{lineHeight:15}} style={{padding:0}}   onPress={() => {
-                                userWordService.saveUserWord(searchWordText, userid);
-                            }}>Save</Button>
+                        <View style={[style.inputContainer, { display: routes?.length > 0 ? "flex" : "none" }]}>
+                            <Chip style={[{ flex: 1, backgroundColor: "transparent" }]}>Save <Text style={{ fontWeight: "bold", fontSize: 20 }}>{searchWordText}</Text> to my search
+
+                            </Chip>
+                            {
+                                isSavingUserSearch ? 
+                                <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> 
+                                :
+                                <Button mode="contained" compact={true} labelStyle={{ lineHeight: 15 }} style={{ padding: 0 }} onPress={saveUserSearch}>Save</Button>
+                            }
                         </View>
                         <View style={style.resultContainer}>
                             <TabView
@@ -235,26 +249,24 @@ const SearchResultItem = (props: { userid: string, item: ListRenderItemInfo<Word
         setIsSaving(false);
     }
 
-    return <Pressable onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }}>
-        <View key={item.index} style={style.resultItem}>
-            <View style={{ flex: 1 }}>
-                <Text style={style.resultItemText}>{item.item.word}</Text>
-                {
-                    item?.item?.chinese ?
-                        <Text>{item.item.chinese}</Text>
-                        : null
-                }
-            </View>
-            <View style={{ width: 40, justifyContent: "center" }}>
-                {
-                    isSaving ? <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> :
-                        <IconButton onPress={(e) => {
-                            e.stopPropagation();
-                            addToUserWords(item.item);
-                        }} icon="plus-circle"></IconButton>
-                }
-            </View>
+    return <View key={item.index} style={style.resultItem}>
+        <View style={{ flex: 1 }}>
+            <Text onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }} style={style.resultItemText}>{item.item.word}</Text>
+            {
+                item?.item?.chinese ?
+                    <Text>{item.item.chinese}</Text>
+                    : null
+            }
         </View>
-    </Pressable>
+        <View style={{ width: 40, justifyContent: "center" }}>
+            {
+                isSaving ? <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> :
+                    <IconButton onPress={(e) => {
+                        e.stopPropagation();
+                        addToUserWords(item.item);
+                    }} icon="plus-circle"></IconButton>
+            }
+        </View>
+    </View>
 }
 export default SearchPage;

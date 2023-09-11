@@ -58,3 +58,10 @@ export type UserWordGroup={
     title:string;
     data:UserWord[];
 }
+
+export type UserSearch={
+    userid:string;
+    search_word:string;
+    date_search:Date;
+    user_search_id:number;
+}

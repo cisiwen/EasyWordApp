@@ -37,7 +37,6 @@ export default class SQLiteDataProvider {
             if (this.db == null) {
                 reject('Database not opened');
             }
-            console.log(this.db);
             this.db!.transaction((tx) => {
                 tx.executeSql(query, params, (tx, results) => {
                     resolve(results);
