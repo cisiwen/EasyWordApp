@@ -22,6 +22,8 @@ function MyStack() {
         <Stack.Navigator>
           <Stack.Screen name="Home" options={
             {
+             
+              statusBarStyle: "dark",
               headerShown: false
             }
           } component={BottomTab} />

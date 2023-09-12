@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useLayoutEffect } from "react";
+import React, { Fragment, useEffect, useLayoutEffect, useMemo } from "react";
 import StartUp from "../instance/StartUp";
 import SQLiteDataProvider from "../provider/SQLiteDataProvider";
 import { View, StyleSheet, TextInput, FlatList, ListRenderItemInfo, Pressable, TextInputChangeEventData } from "react-native";
@@ -18,8 +18,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserDataService } from "../Service/UserDataService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Banner } from 'react-native-paper';
+
+let dbProvider = StartUp.getInstance<SQLiteDataProvider>(SQLiteDataProvider.OBJECTID);
+let userWordService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
+let userid = "Terry";
+let navigation: NativeStackNavigationProp<any, string>|undefined=undefined;
 type State = NavigationState<WordCategory>;
+
 const style = StyleSheet.create({
     topContainer: {
         flex: 1,
@@ -77,17 +82,78 @@ const style = StyleSheet.create({
         height: StyleSheet.hairlineWidth,
     },
 });
+
+const ItemSeparator = () => {
+    const { colors } = useTheme();
+
+    return (
+        <View style={[style.separator, { backgroundColor: colors.primary }]} />
+    );
+};
+
+
+
+const SearchResultPage = (scene: { route: WordCategory }) => {
+    return <View style={{ flex: 1 }}>
+    <FlatList
+        ItemSeparatorComponent={ItemSeparator}
+        data={scene.route.words}
+        renderItem={(item: ListRenderItemInfo<Word>)=>{
+            return <SearchResultItem userid={userid} userWordService={userWordService} navigation={navigation} item={item} />
+        }}>
+    </FlatList>
+</View>
+}
+
+const SearchResultPageMemo=React.memo(SearchResultPage);
+
+const SearchResultItem = (props: { userid: string, item: ListRenderItemInfo<Word>, userWordService: UserDataService, navigation: NativeStackNavigationProp<any, string> | undefined }) => {
+    let [isSaving, setIsSaving] = React.useState(false);
+    let item = props.item;
+    let userid = props.userid;
+    let navigation = props.navigation;
+    const addToUserWords = async (word: Word) => {
+        setIsSaving(true);
+        try {
+            await props.userWordService.saveUserWord(word.word, userid);
+        }
+        catch (error) {
+            console.error(error);
+        }
+        setIsSaving(false);
+    }
+
+    return <View key={item.index} style={style.resultItem}>
+        <View style={{ flex: 1 }}>
+            <Text onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }} style={style.resultItemText}>{item.item.word}</Text>
+            {
+                item?.item?.chinese ?
+                    <Text>{item.item.chinese}</Text>
+                    : null
+            }
+        </View>
+        <View style={{ width: 40, justifyContent: "center" }}>
+            {
+                isSaving ? <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> :
+                    <IconButton onPress={(e) => {
+                        e.stopPropagation();
+                        addToUserWords(item.item);
+                    }} icon="plus-circle"></IconButton>
+            }
+        </View>
+    </View>
+}
 const SearchPage = (props: INavPageProps<any>) => {
-    let dbProvider = StartUp.getInstance<SQLiteDataProvider>(SQLiteDataProvider.OBJECTID);
-    let userWordService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
+   
     let [dbOpened, setDbOpened] = React.useState(false);
     let [isOpening, setIsOpening] = React.useState(true);
     let [searchWord, setSearchWord] = React.useState<SearchResult<Word> | undefined>(undefined);
     let [searchWordText, setSearchWordText] = React.useState("");
     let [debugMessage, setDebugMessage] = React.useState("");
     let [isSavingUserSearch, setIsSavingUserSearch] = React.useState(false);
-    let userid = "Terry";
-    const navigation = props.navigation;
+   
+
+    navigation = props.navigation;
     useLayoutEffect(() => {
         navigation?.setOptions({
             headerTitle: "Word search",
@@ -121,19 +187,7 @@ const SearchPage = (props: INavPageProps<any>) => {
         }
     }, ["TESTING"]);
 
-    const ItemSeparator = () => {
-        const { colors } = useTheme();
-
-        return (
-            <View style={[style.separator, { backgroundColor: colors.primary }]} />
-        );
-    };
-
-
-
-    const renderItem = (item: ListRenderItemInfo<Word>) => {
-        return <SearchResultItem userid={userid} userWordService={userWordService} navigation={navigation} item={item} />
-    }
+  
 
     const searchWordHandler = async (text: string) => {
         //console.log("searching", searchWordText);
@@ -152,27 +206,17 @@ const SearchPage = (props: INavPageProps<any>) => {
             setRoutes([]);
         }
         //console.log(searchWordText, result);
-
     }
     const [index, onIndexChange] = React.useState(1);
     const [routes, setRoutes] = React.useState<WordCategory[]>([]);
-    const readerScene = (scene: { route: WordCategory }) => {
-        //console.log("readerScene", scene.route);
-        return <View style={{ flex: 1 }}>
-            <FlatList
-                ItemSeparatorComponent={ItemSeparator}
-                data={scene.route.words}
-                renderItem={renderItem}>
-            </FlatList>
-        </View>
-    }
+  
     const renderScene = SceneMap({
-        CommonWords: readerScene,
-        Numbers: readerScene,
-        Uppercase: readerScene,
-        Begin: readerScene,
-        End: readerScene,
-        Contains: readerScene,
+        CommonWords: SearchResultPageMemo,
+        Numbers: SearchResultPageMemo,
+        Uppercase: SearchResultPageMemo,
+        Begin: SearchResultPageMemo,
+        End: SearchResultPageMemo,
+        Contains: SearchResultPageMemo,
     });
     const saveUserSearch = async () => {
         setIsSavingUserSearch(true);
@@ -233,40 +277,5 @@ const SearchPage = (props: INavPageProps<any>) => {
     </SafeAreaView>
 };
 
-const SearchResultItem = (props: { userid: string, item: ListRenderItemInfo<Word>, userWordService: UserDataService, navigation: NativeStackNavigationProp<any, string> | undefined }) => {
-    let [isSaving, setIsSaving] = React.useState(false);
-    let item = props.item;
-    let userid = props.userid;
-    let navigation = props.navigation;
-    const addToUserWords = async (word: Word) => {
-        setIsSaving(true);
-        try {
-            await props.userWordService.saveUserWord(word.word, userid);
-        }
-        catch (error) {
-            console.error(error);
-        }
-        setIsSaving(false);
-    }
 
-    return <View key={item.index} style={style.resultItem}>
-        <View style={{ flex: 1 }}>
-            <Text onPress={() => { navigation?.navigate("WordDetail", { words: [item.item] }) }} style={style.resultItemText}>{item.item.word}</Text>
-            {
-                item?.item?.chinese ?
-                    <Text>{item.item.chinese}</Text>
-                    : null
-            }
-        </View>
-        <View style={{ width: 40, justifyContent: "center" }}>
-            {
-                isSaving ? <ActivityIndicator animating={true} size={"small"}></ActivityIndicator> :
-                    <IconButton onPress={(e) => {
-                        e.stopPropagation();
-                        addToUserWords(item.item);
-                    }} icon="plus-circle"></IconButton>
-            }
-        </View>
-    </View>
-}
 export default SearchPage;

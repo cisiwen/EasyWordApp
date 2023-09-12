@@ -56,12 +56,13 @@ const BottomTab = (props: INavPageProps<any>) => {
                     }
                 }}
                 
-                name="MathLayout"
+                name="Mathematic"
                 component={MathLayout} />
 
             <Tab.Screen 
             options={
                 {
+                    headerShown: false,
                      tabBarIcon: ({ color, size }) => {
                         return <Ionicons name="person" color={color} size={size} />
                      }

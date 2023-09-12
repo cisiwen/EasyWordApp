@@ -1,4 +1,4 @@
-import { ListRenderItemInfo, View, FlatList, StyleSheet, SectionList, SectionListData } from "react-native"
+import { ListRenderItemInfo, View, FlatList, StyleSheet, SectionList, SectionListData, SafeAreaView } from "react-native"
 import StartUp from "../instance/StartUp";
 import { UserDataService } from "../Service/UserDataService";
 import { UserSearch, UserWord, UserWordGroup } from "../models/Word";
@@ -54,6 +54,9 @@ const MyWordPage = () => {
                 console.log("error", error);
             });
         }
+        return () => {
+            console.log("MyWordPage unmount");
+        }
     }, ["dd"]);
 
     const removeWord = (word: UserWord) => {
@@ -108,6 +111,9 @@ const MySearchPage = () => {
                 console.log("error", error);
             });
         }
+        return () => {
+            console.log("MySearchPage unmount");
+        }
     }, ["dd"])
     const renderItem = (item: ListRenderItemInfo<UserSearch>) => {
         return (
@@ -128,6 +134,8 @@ const MySearchPage = () => {
         </FlatList>
     </View>
 }
+const MyWordPageMemo=React.memo(MyWordPage);
+const MySearchPageMemo=React.memo(MySearchPage);
 
 const tabStyle = StyleSheet.create({
     tabbar: {
@@ -152,22 +160,9 @@ type TabBarState = {
 }
 type State = NavigationState<TabBarState>;
 const MyPage = () => {
-    const renderMySearchScene = (scene: { route: TabBarState }) => {
-        //console.log("readerScene", scene.route);
-        return <View style={{ flex: 1 }}>
-            <MySearchPage></MySearchPage>
-        </View>
-    }
-
-    const renderMyWordScene = (scene: { route: TabBarState }) => {
-        //console.log("readerScene", scene.route);
-        return <View style={{ flex: 1 }}>
-            <MyWordPage></MyWordPage>
-        </View>
-    }
     const renderScene = SceneMap({
-        Searchs: renderMySearchScene,
-        Words: renderMyWordScene,
+        Searchs: MySearchPageMemo,
+        Words: MyWordPageMemo,
     });
 
     const [index, onIndexChange] = React.useState(0);
@@ -189,9 +184,9 @@ const MyPage = () => {
             gap={20}
         />
     );
-    return <View style={{ flex: 1 }}>
+    return <SafeAreaView style={{ flex: 1,paddingTop:5}}>
         <TabView
-            lazy={false}
+            lazy={true}
             navigationState={{
                 index,
                 routes,
@@ -200,7 +195,7 @@ const MyPage = () => {
             renderTabBar={renderTabBar}
             onIndexChange={onIndexChange}
         />
-    </View>
+    </SafeAreaView>
 }
 
 export default MyPage;
