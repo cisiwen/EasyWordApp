@@ -52,10 +52,8 @@ const MyWordPage = () => {
     let navigation = useNavigation<NativeStackNavigationProp<any, string>>();
     
     useEffect(() => {
-        console.log("MyWordPage");
         if (myWords.length < 1) {
             userDataService.getUserWordsGroup("Terry").then((words) => {
-                console.log("words", JSON.stringify(words));
                 setMyWords(words);
             }).catch((error) => {
                 console.log("error", error);
@@ -63,7 +61,6 @@ const MyWordPage = () => {
         }
         userStateManager.addEventListener(GUID, EventTypes.UserWordChanagedEvent,setMyWords);
         return () => {
-            console.log("MyWordPage unmount");
             userStateManager.removeEventListener(GUID, EventTypes.UserWordChanagedEvent);
         }
     }, ["dd"]);
