@@ -30,6 +30,11 @@ export class UserDataService {
             }
     }
 
+    async deleteUserSearch(userId:string,search:string){
+        let sql = `delete from user_search where ueserid='${userId}' and search_word='${search}'`;
+        await this.provider.executeQuery(sql);
+    }
+
     async getUserSearch(userId:string,word:string|undefined=undefined):Promise<UserSearch[]>{
         
         let sql = `select * from user_search where ueserid='${userId}'`;
@@ -83,7 +88,7 @@ export class UserDataService {
     }
 
     async hideUserWord(userId: string, word: string) {
-        let sql = `update user_words set hidden=1 where userid='${userId}' and word='${word}'`;
+        let sql = `delete from user_words where userid='${userId}' and word='${word}'`;
         await this.provider.executeQuery(sql);
     }
 

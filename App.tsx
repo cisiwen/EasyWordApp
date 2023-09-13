@@ -28,6 +28,7 @@ function MyStack() {
             }
           } component={BottomTab} />
           <Stack.Screen name="WordDetail" options={{
+            statusBarStyle: "dark",
             headerShown: true,
             headerTitle: "",
             headerShadowVisible: false,

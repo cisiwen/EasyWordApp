@@ -3,8 +3,8 @@ import StartUp from "../instance/StartUp";
 import { UserDataService } from "../Service/UserDataService";
 import { UserSearch, UserWord, UserWordGroup } from "../models/Word";
 import { ReactElement, useEffect, useState } from "react";
-import { Text, useTheme } from "react-native-paper";
-import { Avatar, Card, IconButton, List } from 'react-native-paper';
+import { IconButton, useTheme } from "react-native-paper";
+import { Card, List } from 'react-native-paper';
 import { MD3Colors } from "react-native-paper/lib/typescript/types";
 import {
     NavigationState,
@@ -14,6 +14,9 @@ import {
     TabView,
 } from 'react-native-tab-view';
 import React from "react";
+import { EventTypes, UserStateManager } from "./stateManager/userStateManager";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
 const styles = StyleSheet.create({
     resultItem: {
         flexDirection: "row",
@@ -44,6 +47,10 @@ const MyWordPage = () => {
 
     let userDataService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
     let [myWords, setMyWords] = useState<UserWordGroup[]>([]);
+    let userStateManager = StartUp.getInstance<UserStateManager>(UserStateManager.OBJECTID);
+    let GUID=`MyWordPage_${new Date().valueOf()}`;
+    let navigation = useNavigation<NativeStackNavigationProp<any, string>>();
+    
     useEffect(() => {
         console.log("MyWordPage");
         if (myWords.length < 1) {
@@ -54,20 +61,35 @@ const MyWordPage = () => {
                 console.log("error", error);
             });
         }
+        userStateManager.addEventListener(GUID, EventTypes.UserWordChanagedEvent,setMyWords);
         return () => {
             console.log("MyWordPage unmount");
+            userStateManager.removeEventListener(GUID, EventTypes.UserWordChanagedEvent);
         }
     }, ["dd"]);
 
     const removeWord = (word: UserWord) => {
+        userDataService.hideUserWord("Terry", word.word).then((words) => {
+            let myWord = myWords.find((a) => a.data.find((b) => b.word == word.word));
+            if (myWord) {
+                myWord.data = myWord.data.filter((a) => a.word != word.word);
+            }
+            setMyWords([...myWords]);
 
+        }).catch((error) => {
+            console.log("error", error);
+        });
     }
 
     const renderItem = (item: ListRenderItemInfo<UserWord>) => {
         return (
+
             <List.Item
+                onPress={()=>{
+                    navigation.navigate("WordDetail", { words: [{word:item.item.word}] });
+                }}
                 title={item.item.word}
-                right={props => <List.Icon {...props} icon="minus-circle" />}
+                right={props => <IconButton onPress={()=>{removeWord(item.item)}}  {...props} icon="minus-circle" />}
             />
         )
     };
@@ -101,6 +123,9 @@ const MySearchPage = () => {
     const { colors } = useTheme();
     let userDataService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
     let [userSearchs, setUserSearchs] = useState<UserSearch[]>([]);
+    let GUID=`MySearchPage_${new Date().valueOf()}`;
+    let userStateManager = StartUp.getInstance<UserStateManager>(UserStateManager.OBJECTID);
+    let navigation = useNavigation<NativeStackNavigationProp<any, string>>();
     useEffect(() => {
         console.log("MySearchPage");
         if (userSearchs.length < 1) {
@@ -111,18 +136,33 @@ const MySearchPage = () => {
                 console.log("error", error);
             });
         }
+        userStateManager.addEventListener(GUID, EventTypes.UserSearchChanagedEvent,setUserSearchs)
         return () => {
+            userStateManager.removeEventListener(GUID, EventTypes.UserSearchChanagedEvent);
             console.log("MySearchPage unmount");
         }
     }, ["dd"])
+
+    const removeSearch = (search: UserSearch) => {
+        userDataService.deleteUserSearch("Terry", search.search_word).then(() => {
+            setUserSearchs(userSearchs.filter((a) => a.search_word != search.search_word));
+        }).catch((error) => {
+            console.log("error", error);
+        });
+    }
     const renderItem = (item: ListRenderItemInfo<UserSearch>) => {
         return (
-            <Card.Title
-                titleVariant="headlineMedium"
-                subtitle={item.item.date_search.toString()}
-                title={item.item.search_word}
-            >
-            </Card.Title>
+            <Card onPress={(a)=>{
+                navigation.navigate("WordSearch", { searchWord: item.item.search_word });
+            }}>
+                <Card.Title
+                    titleVariant="headlineMedium"
+                    subtitle={item.item.date_search.toString()}
+                    title={item.item.search_word}
+                    right={props => <IconButton onPress={()=>{removeSearch(item.item)}} {...props} icon="minus-circle" />}
+                >
+                </Card.Title>
+            </Card>
         )
     }
     return <View>
@@ -134,8 +174,8 @@ const MySearchPage = () => {
         </FlatList>
     </View>
 }
-const MyWordPageMemo=React.memo(MyWordPage);
-const MySearchPageMemo=React.memo(MySearchPage);
+const MyWordPageMemo = React.memo(MyWordPage);
+const MySearchPageMemo = React.memo(MySearchPage);
 
 const tabStyle = StyleSheet.create({
     tabbar: {
@@ -154,6 +194,7 @@ const tabStyle = StyleSheet.create({
         fontWeight: '400',
     },
 })
+
 type TabBarState = {
     title: string;
     key: string;
@@ -184,7 +225,7 @@ const MyPage = () => {
             gap={20}
         />
     );
-    return <SafeAreaView style={{ flex: 1,paddingTop:5}}>
+    return <SafeAreaView style={{ flex: 1, paddingTop: 5 }}>
         <TabView
             lazy={true}
             navigationState={{

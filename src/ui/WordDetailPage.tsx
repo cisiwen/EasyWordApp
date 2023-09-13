@@ -30,7 +30,8 @@ const WordDetailPage = (props: INavPageProps<Word>) => {
         }
     }
     useEffect(() => {
-        console.log(new Date());
+        words=props?.route?.params;
+        console.log(new Date(),words);
         searchDetail();
     }, [words])
 

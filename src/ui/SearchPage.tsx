@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserDataService } from "../Service/UserDataService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { UserStateManager } from "./stateManager/userStateManager";
 
 let dbProvider = StartUp.getInstance<SQLiteDataProvider>(SQLiteDataProvider.OBJECTID);
 let userWordService = StartUp.getInstance<UserDataService>(UserDataService.OBJECTID);
@@ -115,7 +116,7 @@ const SearchResultItem = (props: { userid: string, item: ListRenderItemInfo<Word
     const addToUserWords = async (word: Word) => {
         setIsSaving(true);
         try {
-            await props.userWordService.saveUserWord(word.word, userid);
+            await StartUp.getInstance<UserStateManager>(UserStateManager.OBJECTID).addToUserWords(word,userid);
         }
         catch (error) {
             console.error(error);
@@ -151,7 +152,7 @@ const SearchPage = (props: INavPageProps<any>) => {
     let [searchWordText, setSearchWordText] = React.useState("");
     let [debugMessage, setDebugMessage] = React.useState("");
     let [isSavingUserSearch, setIsSavingUserSearch] = React.useState(false);
-   
+    let [isSearchSaved, setIsSearchSaved] = React.useState(false);
 
     navigation = props.navigation;
     useLayoutEffect(() => {
@@ -163,13 +164,14 @@ const SearchPage = (props: INavPageProps<any>) => {
                     console.log("onChangeText", e.nativeEvent.text);
                     searchWordHandler(e.nativeEvent.text);
                     setSearchWordText(e.nativeEvent.text);
+                    setIsSearchSaved(false);
                 }
             }
         });
     })
 
     useEffect(() => {
-        console.log("useEffect");
+        console.log("useEffect",props?.route?.params?.searchWord);
         (async () => {
             setDebugMessage("openDatabase start");
             try {
@@ -177,6 +179,12 @@ const SearchPage = (props: INavPageProps<any>) => {
                 setIsOpening(false)
                 setDbOpened(dbOpen);
                 setDebugMessage("openDatabase good");
+                if(props?.route?.params?.searchWord)
+                {
+                    searchWordHandler(props?.route?.params?.searchWord);
+                    setSearchWordText(props?.route?.params?.searchWord);
+                    setIsSearchSaved(true);
+                }
             }
             catch (error) {
                 setDebugMessage(`${FileSystem.documentDirectory}---${JSON.stringify(error)}`);
@@ -185,7 +193,7 @@ const SearchPage = (props: INavPageProps<any>) => {
         return () => {
 
         }
-    }, ["TESTING"]);
+    }, [props?.route?.params?.searchWord]);
 
   
 
@@ -221,7 +229,8 @@ const SearchPage = (props: INavPageProps<any>) => {
     const saveUserSearch = async () => {
         setIsSavingUserSearch(true);
         try {
-            await userWordService.saveUserSearch(searchWordText, userid);
+            await StartUp.getInstance<UserStateManager>(UserStateManager.OBJECTID).addToUserSearch(searchWordText, userid);
+            setIsSearchSaved(true);
         }
         catch (error) {
             console.error(error);
@@ -247,7 +256,7 @@ const SearchPage = (props: INavPageProps<any>) => {
             {
                 !isOpening ?
                     <Fragment>
-                        <View style={[style.inputContainer, { display: routes?.length > 0 ? "flex" : "none" }]}>
+                        <View style={[style.inputContainer, { display: routes?.length > 0 && !isSearchSaved ? "flex" : "none" }]}>
                             <Chip style={[{ flex: 1, backgroundColor: "transparent" }]}>Save <Text style={{ fontWeight: "bold", fontSize: 20 }}>{searchWordText}</Text> to my search
 
                             </Chip>
